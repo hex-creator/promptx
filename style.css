@@ -76,7 +76,7 @@ body {
     align-items: center;
     margin-bottom: 20px;
     padding-bottom: 10px;
-    border-bottom: 1px solid var(--border-color);
+    /* border-bottom: 1px solid var(--border-color); 移除分割线 */
     position: relative;
     min-height: 50px; /* 确保最小高度 */
 }
@@ -125,7 +125,7 @@ h1 {
 .primary-btn:hover {
     background-color: var(--primary-hover);
     box-shadow: var(--shadow-md);
-    transform: translateY(-1px); /* Hover 上浮 */
+    /* transform: translateY(-1px); 移除上浮特效 */
 }
 
 .text-btn {
@@ -216,7 +216,7 @@ h1 {
 .template-card:hover {
     box-shadow: var(--shadow-hover);
     border-color: var(--primary-color); /* Hover 边框变色 */
-    transform: translateY(-2px); /* Hover 上浮 */
+    /* transform: translateY(-2px); 移除上浮特效 */
 }
 
 .template-card.dragging {
@@ -347,7 +347,7 @@ h1 {
     justify-content: flex-end;
     align-items: center;
     padding-top: 10px;
-    border-top: 1px solid var(--border-color);
+    /* border-top: 1px solid var(--border-color); 移除分割线 */
     margin-top: 10px;
     gap: 8px;
 }
