@@ -39,13 +39,16 @@
     scrollbar-width: none; /* Firefox 隐藏滚动条 */
 }
 
-body {
+html, body {
+    height: 100%;
+    overflow: hidden; /* 禁止 body 滚动，交给 .view 处理 */
+}
+
+body { 
     /* 更圆滑的系统字体栈 */
     font-family: "Nunito", "Segoe UI Rounded", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", system-ui, -apple-system, sans-serif;
     background-color: var(--bg-color);
     color: var(--text-main);
-    height: 100vh;
-    overflow: hidden;
     -webkit-font-smoothing: antialiased; /* 字体抗锯齿 */
 }
 
@@ -59,10 +62,19 @@ body {
 .view {
     display: none;
     height: 100%;
+    width: 100%;
     flex-direction: column;
     padding: 20px;
     max-width: 1200px;
     margin: 0 auto;
+    overflow-y: auto; /* 视图内部滚动 */
+    overflow-x: hidden;
+    position: absolute; /* 确保重叠 */
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: var(--bg-color);
     animation: fadeIn 0.3s ease-out; /* 添加进场动画 */
 }
 
@@ -82,7 +94,7 @@ body {
 }
 
 h1 {
-    font-size: 1.5rem;
+    font-size: 1.3rem;
     font-weight: 600;
     position: absolute;
     left: 50%;
@@ -279,7 +291,7 @@ h1 {
 .menu-btn, .drag-btn {
     background: none;
     border: none;
-    font-size: 1.2rem;
+    font-size: 1.15rem;
     color: var(--text-sub);
     cursor: pointer;
     padding: 6px;
@@ -542,16 +554,18 @@ h1 {
 /* --- 移动端适配 --- */
 @media (max-width: 768px) {
     /* 1. 全局调整 */
-    body {
-        overflow: hidden; /* 恢复 body 不滚动，实现局部滚动 */
-    }
+    /* body overflow: hidden 已经在全局设置了，这里不需要重复 */
 
     .view {
         /* padding: 10px;  移除特殊 padding，继承桌面端 */
-        height: 100vh; /* 占满屏幕 */
-        overflow: hidden; /* 内部处理滚动 */
-        display: flex; /* 恢复 flex 布局 */
+        /* height: 100vh;  全局已设为 100% */
+        /* overflow: hidden; 全局已设为 auto */
+        /* display: flex; 错误：这会让所有 view 都显示 */
         flex-direction: column;
+    }
+    
+    .view.active {
+        display: flex; /* 只有 active 时才显示 */
     }
     
     /* Header 调整：保持单行，不换行 */
@@ -574,7 +588,6 @@ h1 {
         flex: 1; /* 占据中间空间 */
         overflow: hidden;
         text-overflow: ellipsis; /* 超出省略 */
-        font-size: 1.2rem; /* 稍微调小字号 */
         display: flex;
         justify-content: center; /* 确保 SVG 居中 */
     }

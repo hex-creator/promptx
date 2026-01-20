@@ -10,19 +10,10 @@ const app = {
     init() {
         this.loadTemplates();
         this.bindEvents();
+        this.handleRoute(); // 初始化路由
         
-        // 路由判断
-        const path = window.location.pathname;
-        const params = new URLSearchParams(window.location.search);
-        const id = params.get('id');
-
-        if (path.endsWith('index.html') || path === '/' || path.endsWith('/')) {
-            this.renderList();
-        } else if (path.endsWith('edit.html')) {
-            this.initEditPage(id);
-        } else if (path.endsWith('generate.html')) {
-            this.initGeneratePage(id);
-        }
+        // 监听浏览器后退/前进
+        window.addEventListener('popstate', () => this.handleRoute());
     },
 
     loadTemplates() {
@@ -30,8 +21,7 @@ const app = {
         if (stored) {
             this.data.templates = JSON.parse(stored);
         } else {
-            // 首次加载，自动导入默认模板
-            this.loadDefaultTemplates(false); // false 表示不提示确认
+            this.loadDefaultTemplates(false);
         }
     },
 
@@ -45,9 +35,7 @@ const app = {
             .then(data => {
                 this.data.templates = data;
                 this.saveTemplates();
-                if (document.getElementById('templateList')) {
-                    this.renderList();
-                }
+                this.renderList();
                 if (confirmRequired) {
                     alert("已成功恢复默认模板");
                 }
@@ -64,74 +52,95 @@ const app = {
 
     bindEvents() {
         // 通用返回
-        const backBtn = document.getElementById('backBtn');
-        if (backBtn) {
-            backBtn.addEventListener('click', () => window.location.href = 'index.html');
-        }
+        document.querySelectorAll('.back-btn').forEach(btn => {
+            btn.addEventListener('click', () => this.navigate('list'));
+        });
 
         // 首页事件
-        if (document.getElementById('listView')) {
-            document.getElementById('addTemplateBtn').addEventListener('click', () => window.location.href = 'edit.html');
-            document.getElementById('searchInput').addEventListener('input', (e) => this.handleSearch(e));
-            
-            // 导入导出
-            document.getElementById('exportBtn').addEventListener('click', () => this.exportTemplates());
-            document.getElementById('importBtn').addEventListener('click', () => document.getElementById('importFile').click());
-            document.getElementById('importFile').addEventListener('change', (e) => this.importTemplates(e));
-            document.getElementById('importDefaultBtn').addEventListener('click', () => this.loadDefaultTemplates(true));
+        document.getElementById('addTemplateBtn').addEventListener('click', () => this.navigate('edit'));
+        document.getElementById('searchInput').addEventListener('input', (e) => this.handleSearch(e));
+        
+        // 导入导出
+        document.getElementById('exportBtn').addEventListener('click', () => this.exportTemplates());
+        document.getElementById('importBtn').addEventListener('click', () => document.getElementById('importFile').click());
+        document.getElementById('importFile').addEventListener('change', (e) => this.importTemplates(e));
+        document.getElementById('importDefaultBtn').addEventListener('click', () => this.loadDefaultTemplates(true));
 
-            // 点击外部关闭下拉菜单
-            document.addEventListener('click', (e) => {
-                if (!e.target.closest('.menu-btn') && !e.target.closest('.menu-dropdown')) {
-                    const menu = document.getElementById('globalMenu');
-                    if (menu) menu.classList.remove('show');
-                }
-            });
-
-            // 拖拽逻辑
-            const listEl = document.getElementById('templateList');
-            if (listEl) {
-                listEl.addEventListener('dragover', (e) => {
-                    e.preventDefault();
-                    const draggingCard = document.querySelector('.dragging');
-                    if (!draggingCard) return;
-                    if (document.getElementById('searchInput').value.trim() !== '') return;
-                    const afterElement = this.getDragAfterElement(listEl, e.clientY);
-                    if (afterElement == null) {
-                        listEl.appendChild(draggingCard);
-                    } else {
-                        listEl.insertBefore(draggingCard, afterElement);
-                    }
-                });
-
-                listEl.addEventListener('drop', (e) => {
-                    e.preventDefault();
-                    if (document.getElementById('searchInput').value.trim() !== '') {
-                        alert("搜索状态下无法排序，请清空搜索框");
-                        this.renderList();
-                        return;
-                    }
-                    this.saveNewOrder();
-                });
+        // 点击外部关闭下拉菜单
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.menu-btn') && !e.target.closest('.menu-dropdown')) {
+                document.getElementById('globalMenu').classList.remove('show');
             }
-        }
+        });
+
+        // 拖拽逻辑
+        const listEl = document.getElementById('templateList');
+        listEl.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            const draggingCard = document.querySelector('.dragging');
+            if (!draggingCard) return;
+            if (document.getElementById('searchInput').value.trim() !== '') return;
+            const afterElement = this.getDragAfterElement(listEl, e.clientY);
+            if (afterElement == null) {
+                listEl.appendChild(draggingCard);
+            } else {
+                listEl.insertBefore(draggingCard, afterElement);
+            }
+        });
+
+        listEl.addEventListener('drop', (e) => {
+            e.preventDefault();
+            if (document.getElementById('searchInput').value.trim() !== '') {
+                alert("搜索状态下无法排序，请清空搜索框");
+                this.renderList();
+                return;
+            }
+            this.saveNewOrder();
+        });
 
         // 编辑页事件
-        if (document.getElementById('editView')) {
-            document.getElementById('saveTemplateBtn').addEventListener('click', () => this.saveTemplate());
-            document.getElementById('insertParamBtn').addEventListener('click', () => this.insertParam());
-        }
+        document.getElementById('saveTemplateBtn').addEventListener('click', () => this.saveTemplate());
+        document.getElementById('insertParamBtn').addEventListener('click', () => this.insertParam());
 
         // 生成页事件
-        if (document.getElementById('generateView')) {
-            document.getElementById('copyResultBtn').addEventListener('click', () => this.copyResult());
-            document.getElementById('toggleEditBtn').addEventListener('click', () => this.toggleEditMode());
+        document.getElementById('copyResultBtn').addEventListener('click', () => this.copyResult());
+        document.getElementById('toggleEditBtn').addEventListener('click', () => this.toggleEditMode());
+    },
+
+    // --- 路由逻辑 ---
+    navigate(page, id = null) {
+        const url = id ? `?page=${page}&id=${id}` : `?page=${page}`;
+        window.history.pushState({}, '', url);
+        this.handleRoute();
+    },
+
+    handleRoute() {
+        const params = new URLSearchParams(window.location.search);
+        const page = params.get('page') || 'list';
+        const id = params.get('id');
+
+        // 隐藏所有视图
+        document.querySelectorAll('.view').forEach(el => el.classList.remove('active'));
+
+        if (page === 'list') {
+            this.showList();
+        } else if (page === 'edit') {
+            this.showEdit(id);
+        } else if (page === 'generate') {
+            this.showGenerate(id);
         }
     },
 
-    // --- 页面初始化逻辑 ---
+    // --- 视图切换 ---
+    showList() {
+        document.getElementById('searchInput').value = '';
+        this.renderList();
+        document.getElementById('listView').classList.add('active');
+        // 滚动回顶部（可选，如果需要记忆位置则不加）
+        // document.getElementById('listView').scrollTop = 0;
+    },
 
-    initEditPage(id) {
+    showEdit(id = null) {
         this.data.currentTemplateId = id;
         const titleEl = document.getElementById('editPageTitle');
         const nameEl = document.getElementById('templateName');
@@ -148,22 +157,35 @@ const app = {
             }
         } else {
             titleEl.textContent = '添加模板';
+            nameEl.value = '';
+            descEl.value = '';
+            contentEl.value = '';
         }
+        document.getElementById('editView').classList.add('active');
     },
 
-    initGeneratePage(id) {
+    showGenerate(id) {
         const template = this.data.templates.find(t => t.id === id);
         if (!template) {
             alert('模板不存在');
-            window.location.href = 'index.html';
+            this.navigate('list');
             return;
         }
 
         this.data.currentTemplateId = id;
+        // 重置为自动模式
+        this.data.isManualMode = false;
+        const previewEl = document.getElementById('resultPreview');
+        const btnEl = document.getElementById('toggleEditBtn');
+        
+        previewEl.readOnly = true;
+        btnEl.textContent = '手动修改';
+
         document.getElementById('genPageTitle').textContent = template.name;
         document.getElementById('genTemplateDesc').textContent = template.desc;
         
         this.renderParams(template.content);
+        document.getElementById('generateView').classList.add('active');
     },
 
     // --- 列表逻辑 ---
@@ -182,7 +204,6 @@ const app = {
 
     renderList(templates = this.data.templates) {
         const listEl = document.getElementById('templateList');
-        if (!listEl) return;
         listEl.innerHTML = '';
 
         if (templates.length === 0) {
@@ -204,30 +225,30 @@ const app = {
                 if (e.target.closest('.menu-btn') || 
                     e.target.closest('.menu-dropdown') || 
                     e.target.closest('.drag-btn')) return;
-                window.location.href = `generate.html?id=${t.id}`;
+                this.navigate('generate', t.id);
             };
 
             const descHtml = t.desc ? `<div class="card-desc">${this.escapeHtml(t.desc)}</div>` : '';
             const previewHtml = t.content ? `<div class="card-preview">${this.escapeHtml(t.content)}</div>` : '';
             
             card.innerHTML = `
-                <div class=\"card-content\">
-                    <div class=\"card-title\">${this.escapeHtml(t.name)}</div>
+                <div class="card-content">
+                    <div class="card-title">${this.escapeHtml(t.name)}</div>
                     ${descHtml}
                     ${previewHtml}
                 </div>
-                <div class=\"card-actions\">
-                    <button class=\"drag-btn\" title=\"长按拖动排序\">
-                        <svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\">
-                            <line x1=\"8\" y1=\"6\" x2=\"21\" y2=\"6\"></line>
-                            <line x1=\"8\" y1=\"12\" x2=\"21\" y2=\"12\"></line>
-                            <line x1=\"8\" y1=\"18\" x2=\"21\" y2=\"18\"></line>
-                            <line x1=\"3\" y1=\"6\" x2=\"3.01\" y2=\"6\"></line>
-                            <line x1=\"3\" y1=\"12\" x2=\"3.01\" y2=\"12\"></line>
-                            <line x1=\"3\" y1=\"18\" x2=\"3.01\" y2=\"18\"></line>
+                <div class="card-actions">
+                    <button class="drag-btn" title="长按拖动排序">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="8" y1="6" x2="21" y2="6"></line>
+                            <line x1="8" y1="12" x2="21" y2="12"></line>
+                            <line x1="8" y1="18" x2="21" y2="18"></line>
+                            <line x1="3" y1="6" x2="3.01" y2="6"></line>
+                            <line x1="3" y1="12" x2="3.01" y2="12"></line>
+                            <line x1="3" y1="18" x2="3.01" y2="18"></line>
                         </svg>
                     </button>
-                    <button class=\"menu-btn\" onclick=\"app.toggleMenu(event, '${t.id}')\">⋮</button>
+                    <button class="menu-btn" onclick="app.toggleMenu(event, '${t.id}')">⋮</button>
                 </div>
             `;
             listEl.appendChild(card);
@@ -246,8 +267,8 @@ const app = {
         const rect = btn.getBoundingClientRect();
 
         menu.innerHTML = `
-            <button class=\"menu-item\" onclick=\"window.location.href='edit.html?id=${id}'\">修改</button>
-            <button class=\"menu-item delete\" onclick=\"app.deleteTemplate('${id}')\">删除</button>
+            <button class="menu-item" onclick="app.navigate('edit', '${id}')">修改</button>
+            <button class="menu-item delete" onclick="app.deleteTemplate('${id}')">删除</button>
         `;
 
         menu.classList.add('show');
@@ -336,7 +357,7 @@ const app = {
         }
 
         this.saveTemplates();
-        window.location.href = 'index.html';
+        this.navigate('list');
     },
 
     deleteTemplate(id) {
