@@ -3,7 +3,8 @@ const app = {
         templates: [],
         currentTemplateId: null,
         paramValues: {},
-        dragSrcIndex: null
+        dragSrcIndex: null,
+        isManualMode: false
     },
 
     init() {
@@ -36,6 +37,7 @@ const app = {
         
         // 生成页
         document.getElementById('copyResultBtn').addEventListener('click', () => this.copyResult());
+        document.getElementById('toggleEditBtn').addEventListener('click', () => this.toggleEditMode());
 
         // 点击外部关闭下拉菜单
         document.addEventListener('click', (e) => {
@@ -155,6 +157,17 @@ const app = {
         if (!template) return;
 
         this.data.currentTemplateId = id;
+        // 重置为自动模式
+        this.data.isManualMode = false;
+        const previewEl = document.getElementById('resultPreview');
+        const btnEl = document.getElementById('toggleEditBtn');
+        
+        previewEl.readOnly = true;
+        btnEl.textContent = '手动修改';
+        // 样式保持一致，无需切换 class
+        // btnEl.classList.remove('primary-btn'); 
+        // btnEl.classList.add('small-btn');
+
         document.getElementById('genPageTitle').textContent = template.name;
         document.getElementById('genTemplateDesc').textContent = template.desc;
         
@@ -379,6 +392,9 @@ const app = {
     },
 
     updatePreview(originalContent) {
+        // 如果是手动模式，不更新预览
+        if (this.data.isManualMode) return;
+
         let result = originalContent;
         for (const [key, value] of Object.entries(this.data.paramValues)) {
             // 全局替换 [key]
@@ -389,11 +405,40 @@ const app = {
             result = result.replace(regex, value || `[${key}]`); // 如果没值，保留占位符或者变空？PRD没说，保留占位符比较直观，或者变空。这里保留占位符让用户知道还没填。
 
         }
-        document.getElementById('resultPreview').textContent = result;
+        document.getElementById('resultPreview').value = result; // textarea 使用 value
+    },
+
+    toggleEditMode() {
+        const previewEl = document.getElementById('resultPreview');
+        const btnEl = document.getElementById('toggleEditBtn');
+
+        if (!this.data.isManualMode) {
+            // 进入手动模式
+            this.data.isManualMode = true;
+            previewEl.readOnly = false;
+            previewEl.focus();
+            btnEl.textContent = '重新生成';
+            // 可选：改变按钮样式以示警告
+            // btnEl.classList.remove('small-btn');
+            // btnEl.classList.add('primary-btn'); 
+        } else {
+            // 尝试恢复自动模式（重新生成）
+            if (confirm("重新生成将覆盖您的手动修改，确定吗？")) {
+                this.data.isManualMode = false;
+                previewEl.readOnly = true;
+                btnEl.textContent = '手动修改';
+                
+                // 强制刷新内容
+                const template = this.data.templates.find(t => t.id === this.data.currentTemplateId);
+                if (template) {
+                    this.updatePreview(template.content);
+                }
+            }
+        }
     },
 
     copyResult() {
-        const text = document.getElementById('resultPreview').textContent;
+        const text = document.getElementById('resultPreview').value; // textarea 使用 value
         navigator.clipboard.writeText(text).then(() => {
             const btn = document.getElementById('copyResultBtn');
             const originalText = btn.textContent;

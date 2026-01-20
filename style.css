@@ -502,14 +502,31 @@ h1 {
 
 .result-preview {
     flex: 1;
-    background-color: #FAFAFA; /* 极淡灰背景 */
+    background-color: #FAFAFA; /* 默认只读背景 */
     padding: 16px;
     border-radius: 8px;
     white-space: pre-wrap;
     overflow-y: auto;
-    font-family: "Menlo", "Monaco", "Courier New", monospace; /* 保持代码感 */
+    font-family: "Menlo", "Monaco", "Courier New", monospace;
     font-size: 1rem;
     line-height: 1.6;
     border: 1px solid var(--border-color);
     color: #374151;
+    resize: none; /* 禁止手动调整大小，由 flex 控制 */
+    width: 100%;
+    transition: all 0.2s;
+}
+
+.result-preview:not([readonly]):focus {
+    background-color: white;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.1);
+    outline: none;
+}
+
+/* 只读状态下聚焦去除默认轮廓 */
+.result-preview[readonly]:focus {
+    outline: none;
+    border-color: var(--border-color); /* 保持原边框颜色 */
+    box-shadow: none;
 }

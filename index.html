@@ -111,9 +111,12 @@
                 <div class="panel preview-panel">
                     <div class="panel-header">
                         <h3>预览结果</h3>
-                        <button id="copyResultBtn" class="btn primary-btn">复制结果</button>
+                        <div style="display: flex; gap: 8px;">
+                            <button id="toggleEditBtn" class="btn primary-btn">手动修改</button>
+                            <button id="copyResultBtn" class="btn primary-btn">复制结果</button>
+                        </div>
                     </div>
-                    <div id="resultPreview" class="result-preview"></div>
+                    <textarea id="resultPreview" class="result-preview" readonly></textarea>
                 </div>
             </div>
         </div>
