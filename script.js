@@ -29,7 +29,33 @@ const app = {
         const stored = localStorage.getItem('promptTemplates');
         if (stored) {
             this.data.templates = JSON.parse(stored);
+        } else {
+            // 首次加载，自动导入默认模板
+            this.loadDefaultTemplates(false); // false 表示不提示确认
         }
+    },
+
+    loadDefaultTemplates(confirmRequired = true) {
+        if (confirmRequired && !confirm("警告：这将清空您当前的所有模板并恢复为默认设置。此操作不可撤销！\n\n确定要继续吗？")) {
+            return;
+        }
+
+        fetch('default_template.json')
+            .then(response => response.json())
+            .then(data => {
+                this.data.templates = data;
+                this.saveTemplates();
+                if (document.getElementById('templateList')) {
+                    this.renderList();
+                }
+                if (confirmRequired) {
+                    alert("已成功恢复默认模板");
+                }
+            })
+            .catch(err => {
+                console.error('加载默认模板失败:', err);
+                if (confirmRequired) alert('加载默认模板失败，请检查网络或文件');
+            });
     },
 
     saveTemplates() {
@@ -52,6 +78,7 @@ const app = {
             document.getElementById('exportBtn').addEventListener('click', () => this.exportTemplates());
             document.getElementById('importBtn').addEventListener('click', () => document.getElementById('importFile').click());
             document.getElementById('importFile').addEventListener('change', (e) => this.importTemplates(e));
+            document.getElementById('importDefaultBtn').addEventListener('click', () => this.loadDefaultTemplates(true));
 
             // 点击外部关闭下拉菜单
             document.addEventListener('click', (e) => {
