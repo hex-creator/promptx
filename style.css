@@ -406,9 +406,17 @@ h1 {
     outline: none;
 }
 
+.form-group:last-child {
+    flex: 1; /* 让最后一个表单组（模板内容）占据剩余空间 */
+    display: flex;
+    flex-direction: column;
+    min-height: 0; /* 关键：允许 flex 子项收缩 */
+}
+
 .form-group textarea {
-    min-height: 300px;
-    resize: vertical;
+    flex: 1; /* 填满父容器 */
+    min-height: 200px; /* 最小高度 */
+    resize: none; /* 禁止手动调整大小 */
     line-height: 1.6;
 }
 

@@ -303,10 +303,12 @@ const app = {
             const end = textarea.selectionEnd;
             const text = textarea.value;
             const insertText = `[${name}]`;
+            const scrollTop = textarea.scrollTop; // 记录滚动位置
             
             textarea.value = text.substring(0, start) + insertText + text.substring(end);
             textarea.focus();
             textarea.selectionStart = textarea.selectionEnd = start + insertText.length;
+            textarea.scrollTop = scrollTop; // 恢复滚动位置
         }
     },
 
