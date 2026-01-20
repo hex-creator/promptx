@@ -1,12 +1,16 @@
 :root {
-    --primary-color: #2563eb;
-    --primary-hover: #1d4ed8;
-    --bg-color: #f8fafc;
-    --card-bg: #ffffff;
-    --text-main: #1e293b;
-    --text-sub: #64748b;
-    --border-color: #e2e8f0;
-    --danger-color: #ef4444;
+    /* 森林绿/现代效能配色 - 微调版 */
+    --primary-color: #059669;       /* 翡翠绿 (仅用于按钮、高亮) */
+    --primary-hover: #047857;       /* 深翡翠绿 */
+    --bg-color: #F9FAFB;            /* 淡灰色背景 */
+    --card-bg: #ffffff;             /* 纯白卡片 */
+    --text-main: #111827;           /* 黑色/深灰 */
+    --text-sub: #6B7280;            /* 次级灰 */
+    --border-color: #E5E7EB;        /* 中性灰色线条 */
+    --danger-color: #EF4444;        /* 警告红 */
+    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    --shadow-hover: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
 }
 
 * {
@@ -15,12 +19,40 @@
     padding: 0;
 }
 
+/* --- 滚动条美化 (Minimalist Hidden) --- */
+::-webkit-scrollbar {
+    width: 0px;
+    height: 0px;
+    background: transparent; /* 可选：完全隐藏 */
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    background: transparent;
+}
+
+/* Firefox 滚动条 */
+* {
+    scrollbar-width: none; /* Firefox 隐藏滚动条 */
+}
+
 body {
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    /* 更圆滑的系统字体栈 */
+    font-family: "Nunito", "Segoe UI Rounded", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", system-ui, -apple-system, sans-serif;
     background-color: var(--bg-color);
     color: var(--text-main);
     height: 100vh;
-    overflow: hidden; /* 防止整体滚动，各部分内部滚动 */
+    overflow: hidden;
+    -webkit-font-smoothing: antialiased; /* 字体抗锯齿 */
+}
+
+/* 页面淡入动画 */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
 }
 
 /* 通用组件 */
@@ -31,6 +63,7 @@ body {
     padding: 20px;
     max-width: 1200px;
     margin: 0 auto;
+    animation: fadeIn 0.3s ease-out; /* 添加进场动画 */
 }
 
 .view.active {
@@ -45,6 +78,7 @@ body {
     padding-bottom: 10px;
     border-bottom: 1px solid var(--border-color);
     position: relative;
+    min-height: 50px; /* 确保最小高度 */
 }
 
 h1 {
@@ -55,29 +89,43 @@ h1 {
     transform: translateX(-50%);
     margin: 0;
     white-space: nowrap;
+    color: var(--text-main);
+    display: flex; /* 确保 SVG 块级显示 */
+    align-items: center;
+    justify-content: center;
+    width: auto; /* 自适应宽度 */
+    max-width: 60%; /* 防止与两侧按钮重叠 */
+    overflow: visible; /* 允许 SVG 溢出（如果有的话，虽然不应该） */
 }
 
 .header-spacer {
-    width: 40px; /* 占位，与左侧按钮宽度大致匹配 */
+    width: 40px;
 }
 
 .btn {
     padding: 8px 16px;
-    border-radius: 6px;
+    border-radius: 8px; /* 稍微圆润一点 */
     border: none;
     cursor: pointer;
     font-size: 0.9rem;
-    transition: all 0.2s;
-    z-index: 1; /* 确保按钮在标题之上 */
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); /* 优化动画曲线 */
+    font-weight: 500;
+}
+
+.btn:active {
+    transform: scale(0.95); /* 点击微缩效果 */
 }
 
 .primary-btn {
     background-color: var(--primary-color);
     color: white;
+    box-shadow: var(--shadow-sm);
 }
 
 .primary-btn:hover {
     background-color: var(--primary-hover);
+    box-shadow: var(--shadow-md);
+    transform: translateY(-1px); /* Hover 上浮 */
 }
 
 .text-btn {
@@ -87,14 +135,19 @@ h1 {
 }
 
 .text-btn:hover {
-    color: var(--text-main);
+    color: var(--primary-color); /* Hover 变主色 */
 }
 
 .small-btn {
     padding: 4px 8px;
     font-size: 0.8rem;
-    background-color: var(--bg-color);
+    background-color: white;
     border: 1px solid var(--border-color);
+    color: var(--primary-color);
+}
+
+.small-btn:hover {
+    background-color: var(--bg-color);
 }
 
 .icon-btn {
@@ -104,30 +157,36 @@ h1 {
     display: flex;
     align-items: center;
     justify-content: center;
+    border-radius: 50%; /* 圆形按钮 */
 }
 
 .icon-btn:hover {
-    color: var(--text-main);
-    background-color: rgba(0,0,0,0.05);
+    color: var(--primary-color);
+    background-color: rgba(5, 150, 105, 0.1); /* 浅绿色背景 */
 }
 
 /* 搜索框 */
 .search-bar {
     margin-bottom: 16px;
+    display: flex;
+    gap: 12px; /* 输入框和按钮之间的间距 */
 }
 
 .search-bar input {
-    width: 100%;
+    flex: 1; /* 占据剩余空间 */
     padding: 10px 16px;
     border: 1px solid var(--border-color);
-    border-radius: 8px;
+    border-radius: 12px;
     font-size: 1rem;
     outline: none;
-    transition: border-color 0.2s;
+    transition: all 0.2s;
+    background-color: white;
+    box-shadow: var(--shadow-sm);
 }
 
 .search-bar input:focus {
     border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.2); /* 绿色光晕 */
 }
 
 /* 列表页 */
@@ -137,112 +196,107 @@ h1 {
     display: flex;
     flex-direction: column;
     gap: 16px;
-    padding-bottom: 20px; /* 底部留白 */
+    padding: 10px 0 10px 0; /* 去除左右 padding，保持对齐 */
 }
 
 .template-card {
     background: var(--card-bg);
     border: 1px solid var(--border-color);
-    border-radius: 8px;
+    border-radius: 12px; /* 更圆润 */
     padding: 16px;
     position: relative;
     cursor: pointer;
-    transition: box-shadow 0.2s, transform 0.2s;
+    transition: all 0.2s ease;
     display: flex;
     justify-content: space-between; /* 左右布局 */
     align-items: center; /* 垂直居中 */
+    box-shadow: var(--shadow-sm);
 }
 
 .template-card:hover {
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    box-shadow: var(--shadow-hover);
+    border-color: var(--primary-color); /* Hover 边框变色 */
+    transform: translateY(-2px); /* Hover 上浮 */
 }
 
 .template-card.dragging {
-    opacity: 0.5;
+    opacity: 0.8;
     border: 2px dashed var(--primary-color);
-    background: #f0f9ff;
+    background: var(--bg-color);
+    transform: scale(1.02);
+    box-shadow: var(--shadow-hover);
 }
 
 .card-content {
     flex: 1;
     display: flex;
     flex-direction: column;
-    gap: 4px; /* 减小间距 */
-    padding-right: 16px; /* 防止文字碰到按钮 */
-    min-width: 0; /* 关键：防止子元素撑开导致溢出 */
+    gap: 4px;
+    padding-right: 16px;
+    min-width: 0;
 }
 
 .card-title {
     font-weight: 400; /* 不加粗 */
-    font-size: 1rem; /* 正常字号 */
+    font-size: 1rem;
     color: var(--text-main);
 }
 
 .card-desc {
-    font-size: 0.85rem; /* 稍微小一点 */
+    font-size: 0.85rem;
     color: var(--text-sub);
     line-height: 1.4;
     display: -webkit-box;
-    -webkit-line-clamp: 1; /* 限制一行 */
+    -webkit-line-clamp: 1;
     -webkit-box-orient: vertical;
     overflow: hidden;
 }
 
 .card-preview {
-    font-size: 0.85rem; /* 与描述一致 */
+    font-size: 0.85rem;
     color: var(--text-sub);
-    /* 去除背景和边框 */
     background-color: transparent;
     padding: 0;
     border: none;
     margin-top: 0;
-    
-    white-space: nowrap; /* 单行显示 */
+    white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    opacity: 0.8; /* 稍微淡一点 */
 }
 
 .card-actions {
     display: flex;
-    flex-direction: row; /* 水平排列 */
+    flex-direction: row;
     justify-content: flex-end;
     align-items: center;
-    width: auto; /* 自适应宽度 */
+    width: auto;
     flex-shrink: 0;
     gap: 8px;
     margin-left: 8px;
 }
 
-.menu-btn {
+.menu-btn, .drag-btn {
     background: none;
     border: none;
     font-size: 1.2rem;
     color: var(--text-sub);
     cursor: pointer;
-    padding: 4px;
-    border-radius: 4px;
-}
-
-.menu-btn:hover {
-    background-color: var(--bg-color);
-    color: var(--text-main);
-}
-
-.drag-btn {
-    background: none;
-    border: none;
-    color: var(--text-sub);
-    cursor: grab;
-    padding: 4px;
-    border-radius: 4px;
+    padding: 6px;
+    border-radius: 6px;
+    transition: all 0.2s;
     display: flex;
     align-items: center;
     justify-content: center;
 }
 
-.drag-btn:hover {
-    color: var(--text-main);
+.menu-btn:hover, .drag-btn:hover {
     background-color: var(--bg-color);
+    color: var(--primary-color);
+}
+
+.drag-btn {
+    cursor: grab;
 }
 
 .drag-btn:active {
@@ -250,17 +304,17 @@ h1 {
 }
 
 .menu-dropdown {
-    position: absolute;
-    top: 40px;
-    right: 10px;
+    position: fixed; /* 改为 fixed 定位，脱离文档流 */
     background: white;
     border: 1px solid var(--border-color);
-    border-radius: 6px;
-    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+    box-shadow: var(--shadow-hover);
     display: none;
-    z-index: 10;
+    z-index: 1000; /* 确保层级最高 */
     flex-direction: column;
-    min-width: 100px;
+    min-width: 120px;
+    overflow: hidden;
+    animation: fadeIn 0.1s ease-out;
 }
 
 .menu-dropdown.show {
@@ -268,19 +322,22 @@ h1 {
 }
 
 .menu-item {
-    padding: 8px 12px;
+    padding: 10px 16px;
     text-align: left;
     background: none;
     border: none;
     cursor: pointer;
     font-size: 0.9rem;
+    transition: background 0.1s;
 }
 
 .menu-item:hover {
     background-color: var(--bg-color);
+    color: var(--primary-color);
 }
 
-.menu-item.delete {
+.menu-item.delete:hover {
+    background-color: #FEF2F2;
     color: var(--danger-color);
 }
 
@@ -309,12 +366,13 @@ h1 {
 .form-container {
     background: var(--card-bg);
     padding: 24px;
-    border-radius: 8px;
+    border-radius: 12px;
     border: 1px solid var(--border-color);
     flex: 1;
     display: flex;
     flex-direction: column;
     gap: 20px;
+    box-shadow: var(--shadow-sm);
 }
 
 .form-group {
@@ -324,23 +382,34 @@ h1 {
 }
 
 .form-group label {
-    font-weight: 500;
+    font-weight: 600;
     font-size: 0.9rem;
+    color: var(--text-main);
 }
 
 .form-group input,
 .form-group textarea {
-    padding: 10px;
+    padding: 12px;
     border: 1px solid var(--border-color);
-    border-radius: 6px;
+    border-radius: 8px;
     font-size: 1rem;
     font-family: inherit;
+    transition: all 0.2s;
+    background-color: #FAFAFA;
+}
+
+.form-group input:focus,
+.form-group textarea:focus {
+    background-color: white;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.1);
+    outline: none;
 }
 
 .form-group textarea {
     min-height: 300px;
     resize: vertical;
-    line-height: 1.5;
+    line-height: 1.6;
 }
 
 .toolbar {
@@ -352,7 +421,7 @@ h1 {
     display: flex;
     gap: 20px;
     flex: 1;
-    height: calc(100% - 80px); /* 减去header高度 */
+    height: calc(100% - 80px);
 }
 
 .left-panel {
@@ -360,11 +429,12 @@ h1 {
     min-width: 250px;
     background: var(--card-bg);
     border: 1px solid var(--border-color);
-    border-radius: 8px;
+    border-radius: 12px;
     padding: 20px;
     display: flex;
     flex-direction: column;
     overflow: hidden;
+    box-shadow: var(--shadow-sm);
 }
 
 .right-column {
@@ -378,20 +448,21 @@ h1 {
 .panel {
     background: var(--card-bg);
     border: 1px solid var(--border-color);
-    border-radius: 8px;
+    border-radius: 12px;
     padding: 20px;
     display: flex;
     flex-direction: column;
     overflow: hidden;
+    box-shadow: var(--shadow-sm);
 }
 
 .desc-panel {
-    flex: 0 0 auto; /* 高度自适应内容 */
-    max-height: 30%; /* 限制最大高度 */
+    flex: 0 0 auto;
+    max-height: 30%;
 }
 
 .preview-panel {
-    flex: 1; /* 占据剩余空间 */
+    flex: 1;
 }
 
 .panel-header {
@@ -401,6 +472,11 @@ h1 {
     margin-bottom: 16px;
     padding-bottom: 10px;
     border-bottom: 1px solid var(--border-color);
+}
+
+.panel-header h3 {
+    font-weight: 600;
+    color: var(--text-main); /* 面板标题改为黑色 */
 }
 
 .subtitle {
@@ -414,23 +490,26 @@ h1 {
     display: flex;
     flex-direction: column;
     gap: 16px;
+    padding-right: 4px; /* 滚动条间距 */
 }
 
 .desc-content {
     color: var(--text-sub);
     font-size: 0.95rem;
-    line-height: 1.5;
+    line-height: 1.6;
     overflow-y: auto;
 }
 
 .result-preview {
     flex: 1;
-    background-color: var(--bg-color);
+    background-color: #FAFAFA; /* 极淡灰背景 */
     padding: 16px;
-    border-radius: 6px;
+    border-radius: 8px;
     white-space: pre-wrap;
     overflow-y: auto;
-    font-family: monospace;
+    font-family: "Menlo", "Monaco", "Courier New", monospace; /* 保持代码感 */
     font-size: 1rem;
     line-height: 1.6;
+    border: 1px solid var(--border-color);
+    color: #374151;
 }

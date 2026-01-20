@@ -39,8 +39,8 @@ const app = {
 
         // 点击外部关闭下拉菜单
         document.addEventListener('click', (e) => {
-            if (!e.target.closest('.menu-btn')) {
-                document.querySelectorAll('.menu-dropdown').forEach(el => el.classList.remove('show'));
+            if (!e.target.closest('.menu-btn') && !e.target.closest('.menu-dropdown')) {
+                document.getElementById('globalMenu').classList.remove('show');
             }
         });
 
@@ -234,13 +234,7 @@ const app = {
                             <line x1="3" y1="18" x2="3.01" y2="18"></line>
                         </svg>
                     </button>
-                    <div style="position: relative;">
-                        <button class="menu-btn" onclick="app.toggleMenu(event, '${t.id}')">⋮</button>
-                        <div id="menu-${t.id}" class="menu-dropdown">
-                            <button class="menu-item" onclick="app.showEdit('${t.id}')">修改</button>
-                            <button class="menu-item delete" onclick="app.deleteTemplate('${t.id}')">删除</button>
-                        </div>
-                    </div>
+                    <button class="menu-btn" onclick="app.toggleMenu(event, '${t.id}')">⋮</button>
                 </div>
             `;
             listEl.appendChild(card);
@@ -261,12 +255,30 @@ const app = {
 
     toggleMenu(e, id) {
         e.stopPropagation();
-        // 关闭其他菜单
-        document.querySelectorAll('.menu-dropdown').forEach(el => {
-            if (el.id !== `menu-${id}`) el.classList.remove('show');
-        });
-        const menu = document.getElementById(`menu-${id}`);
-        menu.classList.toggle('show');
+        const menu = document.getElementById('globalMenu');
+        const btn = e.currentTarget;
+        const rect = btn.getBoundingClientRect();
+
+        // 设置菜单内容
+        menu.innerHTML = `
+            <button class="menu-item" onclick="app.showEdit('${id}')">修改</button>
+            <button class="menu-item delete" onclick="app.deleteTemplate('${id}')">删除</button>
+        `;
+
+        // 显示菜单以获取尺寸
+        menu.classList.add('show');
+        
+        // 计算位置：优先显示在按钮左下方，如果靠右则向左偏移
+        let top = rect.bottom + 5;
+        let left = rect.right - menu.offsetWidth;
+
+        // 边界检查（防止超出底部）
+        if (top + menu.offsetHeight > window.innerHeight) {
+            top = rect.top - menu.offsetHeight - 5; // 向上弹出
+        }
+
+        menu.style.top = `${top}px`;
+        menu.style.left = `${left}px`;
     },
 
     // --- 编辑逻辑 ---
@@ -352,7 +364,7 @@ const app = {
             
             const input = document.createElement('input');
             input.type = 'text';
-            input.placeholder = `输入 ${param} 的内容...`;
+            input.placeholder = `${param}`;
             input.oninput = (e) => {
                 this.data.paramValues[param] = e.target.value;
                 this.updatePreview(content);
