@@ -111,6 +111,25 @@ h1 {
     background-color: rgba(0,0,0,0.05);
 }
 
+/* 搜索框 */
+.search-bar {
+    margin-bottom: 16px;
+}
+
+.search-bar input {
+    width: 100%;
+    padding: 10px 16px;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    font-size: 1rem;
+    outline: none;
+    transition: border-color 0.2s;
+}
+
+.search-bar input:focus {
+    border-color: var(--primary-color);
+}
+
 /* 列表页 */
 .template-list {
     flex: 1;
@@ -118,6 +137,7 @@ h1 {
     display: flex;
     flex-direction: column;
     gap: 16px;
+    padding-bottom: 20px; /* 底部留白 */
 }
 
 .template-card {
@@ -127,33 +147,70 @@ h1 {
     padding: 16px;
     position: relative;
     cursor: pointer;
-    transition: box-shadow 0.2s;
+    transition: box-shadow 0.2s, transform 0.2s;
     display: flex;
-    flex-direction: column;
+    justify-content: space-between; /* 左右布局 */
+    align-items: center; /* 垂直居中 */
 }
 
 .template-card:hover {
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
 }
 
-.card-header {
+.template-card.dragging {
+    opacity: 0.5;
+    border: 2px dashed var(--primary-color);
+    background: #f0f9ff;
+}
+
+.card-content {
+    flex: 1;
     display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    margin-bottom: 8px;
+    flex-direction: column;
+    gap: 4px; /* 减小间距 */
+    padding-right: 16px; /* 防止文字碰到按钮 */
+    min-width: 0; /* 关键：防止子元素撑开导致溢出 */
 }
 
 .card-title {
-    font-weight: 600;
-    font-size: 1.1rem;
+    font-weight: 400; /* 不加粗 */
+    font-size: 1rem; /* 正常字号 */
     color: var(--text-main);
 }
 
 .card-desc {
-    font-size: 0.9rem;
+    font-size: 0.85rem; /* 稍微小一点 */
     color: var(--text-sub);
     line-height: 1.4;
-    flex: 1;
+    display: -webkit-box;
+    -webkit-line-clamp: 1; /* 限制一行 */
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.card-preview {
+    font-size: 0.85rem; /* 与描述一致 */
+    color: var(--text-sub);
+    /* 去除背景和边框 */
+    background-color: transparent;
+    padding: 0;
+    border: none;
+    margin-top: 0;
+    
+    white-space: nowrap; /* 单行显示 */
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.card-actions {
+    display: flex;
+    flex-direction: row; /* 水平排列 */
+    justify-content: flex-end;
+    align-items: center;
+    width: auto; /* 自适应宽度 */
+    flex-shrink: 0;
+    gap: 8px;
+    margin-left: 8px;
 }
 
 .menu-btn {
@@ -162,7 +219,34 @@ h1 {
     font-size: 1.2rem;
     color: var(--text-sub);
     cursor: pointer;
-    padding: 0 4px;
+    padding: 4px;
+    border-radius: 4px;
+}
+
+.menu-btn:hover {
+    background-color: var(--bg-color);
+    color: var(--text-main);
+}
+
+.drag-btn {
+    background: none;
+    border: none;
+    color: var(--text-sub);
+    cursor: grab;
+    padding: 4px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.drag-btn:hover {
+    color: var(--text-main);
+    background-color: var(--bg-color);
+}
+
+.drag-btn:active {
+    cursor: grabbing;
 }
 
 .menu-dropdown {
@@ -198,6 +282,27 @@ h1 {
 
 .menu-item.delete {
     color: var(--danger-color);
+}
+
+/* 底部 Footer */
+.app-footer {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    padding-top: 10px;
+    border-top: 1px solid var(--border-color);
+    margin-top: 10px;
+    gap: 8px;
+}
+
+.app-footer .divider {
+    color: var(--border-color);
+    font-size: 0.8rem;
+}
+
+.app-footer .btn {
+    padding: 4px 8px;
+    font-size: 0.85rem;
 }
 
 /* 编辑页 */

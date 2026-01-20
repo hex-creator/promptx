@@ -2,7 +2,8 @@ const app = {
     data: {
         templates: [],
         currentTemplateId: null,
-        paramValues: {}
+        paramValues: {},
+        dragSrcIndex: null
     },
 
     init() {
@@ -26,6 +27,9 @@ const app = {
         // 导航
         document.getElementById('addTemplateBtn').addEventListener('click', () => this.showEdit());
         
+        // 搜索
+        document.getElementById('searchInput').addEventListener('input', (e) => this.handleSearch(e));
+
         // 编辑页
         document.getElementById('saveTemplateBtn').addEventListener('click', () => this.saveTemplate());
         document.getElementById('insertParamBtn').addEventListener('click', () => this.insertParam());
@@ -39,6 +43,74 @@ const app = {
                 document.querySelectorAll('.menu-dropdown').forEach(el => el.classList.remove('show'));
             }
         });
+
+        // 导入导出
+        document.getElementById('exportBtn').addEventListener('click', () => this.exportTemplates());
+        document.getElementById('importBtn').addEventListener('click', () => document.getElementById('importFile').click());
+        document.getElementById('importFile').addEventListener('change', (e) => this.importTemplates(e));
+
+        // --- 拖拽排序逻辑 (容器级) ---
+        const listEl = document.getElementById('templateList');
+        
+        listEl.addEventListener('dragover', (e) => {
+            e.preventDefault(); // 允许 drop
+            const draggingCard = document.querySelector('.dragging');
+            if (!draggingCard) return;
+
+            // 如果正在搜索，禁止排序视觉效果
+            if (document.getElementById('searchInput').value.trim() !== '') return;
+
+            const afterElement = this.getDragAfterElement(listEl, e.clientY);
+            if (afterElement == null) {
+                listEl.appendChild(draggingCard);
+            } else {
+                listEl.insertBefore(draggingCard, afterElement);
+            }
+        });
+
+        listEl.addEventListener('drop', (e) => {
+            e.preventDefault();
+            if (document.getElementById('searchInput').value.trim() !== '') {
+                alert("搜索状态下无法排序，请清空搜索框");
+                this.renderList(); // 恢复原状
+                return;
+            }
+            this.saveNewOrder();
+        });
+    },
+
+    getDragAfterElement(container, y) {
+        const draggableElements = [...container.querySelectorAll('.template-card:not(.dragging)')];
+
+        return draggableElements.reduce((closest, child) => {
+            const box = child.getBoundingClientRect();
+            const offset = y - box.top - box.height / 2; // 计算鼠标距离元素中心的垂直距离
+            if (offset < 0 && offset > closest.offset) {
+                return { offset: offset, element: child };
+            } else {
+                return closest;
+            }
+        }, { offset: Number.NEGATIVE_INFINITY }).element;
+    },
+
+    saveNewOrder() {
+        const newOrderIds = Array.from(document.querySelectorAll('.template-card')).map(el => el.dataset.id);
+        const newTemplates = [];
+        
+        // 根据 DOM ID 顺序重组数据
+        newOrderIds.forEach(id => {
+            const t = this.data.templates.find(item => item.id === id);
+            if (t) newTemplates.push(t);
+        });
+        
+        // 只有当顺序真的改变且数据完整时才保存
+        if (newTemplates.length === this.data.templates.length) {
+            this.data.templates = newTemplates;
+            this.saveTemplates();
+        } else {
+            // 异常情况，重新渲染恢复
+            this.renderList();
+        }
     },
 
     // --- 视图切换 ---
@@ -48,6 +120,8 @@ const app = {
     },
 
     showList() {
+        // 清空搜索框
+        document.getElementById('searchInput').value = '';
         this.renderList();
         this.switchView('listView');
     },
@@ -90,22 +164,76 @@ const app = {
     },
 
     // --- 列表逻辑 ---
-    renderList() {
+    handleSearch(e) {
+        const query = e.target.value.toLowerCase().trim();
+        if (!query) {
+            this.renderList();
+            return;
+        }
+        const filtered = this.data.templates.filter(t => 
+            t.name.toLowerCase().includes(query) || 
+            t.desc.toLowerCase().includes(query)
+        );
+        this.renderList(filtered);
+    },
+
+    renderList(templates = this.data.templates) {
         const listEl = document.getElementById('templateList');
         listEl.innerHTML = '';
 
-        this.data.templates.forEach(t => {
+        if (templates.length === 0) {
+            listEl.innerHTML = '<div style="text-align:center; color:var(--text-sub); padding: 20px;">没有找到模板</div>';
+            return;
+        }
+
+        templates.forEach((t, index) => {
             const card = document.createElement('div');
             card.className = 'template-card';
+            card.draggable = false; // 默认不可拖拽
+            card.dataset.index = index; // 存储索引
+            card.dataset.id = t.id;
+
+            // 绑定拖拽事件 (仅负责样式切换)
+            card.addEventListener('dragstart', () => {
+                card.classList.add('dragging');
+            });
+            card.addEventListener('dragend', () => {
+                card.classList.remove('dragging');
+            });
+
             card.onclick = (e) => {
-                // 如果点击的是菜单按钮或菜单项，不跳转
-                if (e.target.closest('.menu-btn') || e.target.closest('.menu-dropdown')) return;
+                // 如果点击的是菜单按钮、菜单项或拖动按钮，不跳转
+                if (e.target.closest('.menu-btn') || 
+                    e.target.closest('.menu-dropdown') || 
+                    e.target.closest('.drag-btn')) return;
                 this.showGenerate(t.id);
             };
 
+            // 拖动按钮事件绑定
+            // 注意：这里我们通过 HTML 字符串生成元素，所以需要在 appendChild 后绑定事件
+            // 或者直接在 HTML 中使用 onclick (不推荐用于复杂逻辑)
+            // 这里我们先生成 HTML，然后查找按钮绑定事件
+            
+            const descHtml = t.desc ? `<div class="card-desc">${this.escapeHtml(t.desc)}</div>` : '';
+            const previewHtml = t.content ? `<div class="card-preview">${this.escapeHtml(t.content)}</div>` : '';
+            
             card.innerHTML = `
-                <div class="card-header">
-                    <span class="card-title">${this.escapeHtml(t.name)}</span>
+                <div class="card-content">
+                    <div class="card-title">${this.escapeHtml(t.name)}</div>
+                    ${descHtml}
+                    ${previewHtml}
+                </div>
+                <div class="card-actions">
+                    <button class="drag-btn" title="长按拖动排序">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="8" y1="6" x2="21" y2="6"></line>
+                            <line x1="8" y1="12" x2="21" y2="12"></line>
+                            <line x1="8" y1="18" x2="21" y2="18"></line>
+                            <line x1="3" y1="6" x2="3.01" y2="6"></line>
+                            <line x1="3" y1="12" x2="3.01" y2="12"></line>
+                            <line x1="3" y1="18" x2="3.01" y2="18"></line>
+                        </svg>
+                    </button>
                     <div style="position: relative;">
                         <button class="menu-btn" onclick="app.toggleMenu(event, '${t.id}')">⋮</button>
                         <div id="menu-${t.id}" class="menu-dropdown">
@@ -114,9 +242,20 @@ const app = {
                         </div>
                     </div>
                 </div>
-                <div class="card-desc">${this.escapeHtml(t.desc)}</div>
             `;
             listEl.appendChild(card);
+
+            // 绑定拖动按钮的 mousedown 事件
+            const dragBtn = card.querySelector('.drag-btn');
+            dragBtn.addEventListener('mousedown', () => {
+                card.draggable = true;
+            });
+            dragBtn.addEventListener('mouseup', () => {
+                card.draggable = false;
+            });
+            dragBtn.addEventListener('mouseleave', () => {
+                card.draggable = false;
+            });
         });
     },
 
@@ -236,14 +375,7 @@ const app = {
             const safeKey = key.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
             const regex = new RegExp(`\\[${safeKey}\\]`, 'g');
             result = result.replace(regex, value || `[${key}]`); // 如果没值，保留占位符或者变空？PRD没说，保留占位符比较直观，或者变空。这里保留占位符让用户知道还没填。
-            // 修正：通常生成时如果没填，应该显示为空或者保留。为了用户体验，如果没填，保留占位符提示用户。
-            // 但如果用户真的想留空呢？
-            // 让我们改成：如果没填，就显示为空字符串，这样预览就是最终结果。
-            // 不，PRD说“依次输入所有参数内容-> 预览”。
-            // 还是替换成 value 吧。如果 value 是空串，就替换成空串。
-            // 但是为了让用户看到哪里变了，如果 value 是空，我还是保留 [key] 比较好，或者高亮显示。
-            // 简单起见：直接替换。
-             result = result.replace(regex, value);
+
         }
         document.getElementById('resultPreview').textContent = result;
     },
@@ -265,6 +397,70 @@ const app = {
              .replace(/>/g, "&gt;")
              .replace(/"/g, "&quot;")
              .replace(/'/g, "&#039;");
+    },
+
+    // --- 导入导出 ---
+    exportTemplates() {
+        const dataStr = JSON.stringify(this.data.templates, null, 2);
+        const blob = new Blob([dataStr], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = "我的提示词.json";
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    },
+
+    importTemplates(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            try {
+                const imported = JSON.parse(e.target.result);
+                if (!Array.isArray(imported)) {
+                    alert("文件格式错误：必须是 JSON 数组");
+                    return;
+                }
+
+                let addedCount = 0;
+                imported.forEach(newItem => {
+                    // 简单校验
+                    if (!newItem.id || !newItem.name || !newItem.content) return;
+
+                    // 检查是否存在同 ID
+                    const exists = this.data.templates.some(t => t.id === newItem.id);
+                    if (!exists) {
+                        this.data.templates.push(newItem);
+                        addedCount++;
+                    } else {
+                        // 可选：如果 ID 相同，是否覆盖？这里选择跳过或更新。
+                        // 简单起见，如果 ID 相同，我们生成新 ID 并添加（视为复制），或者直接跳过。
+                        // 为了避免冲突，这里策略是：如果 ID 相同，视为已存在，不处理。
+                        // 或者：生成新 ID 强制导入。
+                        // 让我们采用：如果 ID 相同，询问用户或者直接生成新 ID 导入。
+                        // 鉴于这是备份恢复，通常希望恢复旧数据。
+                        // 简单策略：追加，如果有重复 ID，生成新 ID。
+                        const newItemWithNewId = { ...newItem, id: Date.now().toString() + Math.random().toString(36).substr(2, 9) };
+                        this.data.templates.push(newItemWithNewId);
+                        addedCount++;
+                    }
+                });
+
+                this.saveTemplates();
+                this.renderList();
+                alert(`成功导入 ${addedCount} 个模板`);
+            } catch (err) {
+                alert("导入失败：文件解析错误");
+                console.error(err);
+            }
+            // 清空 input，允许再次选择同名文件
+            event.target.value = '';
+        };
+        reader.readAsText(file);
     }
 };
 
