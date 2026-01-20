@@ -196,7 +196,7 @@ h1 {
     display: flex;
     flex-direction: column;
     gap: 16px;
-    padding: 10px 0 10px 0; /* 去除左右 padding，保持对齐 */
+    padding: 10px 0 150px 0; /* 去除左右 padding，保持对齐 */
 }
 
 .template-card {
@@ -537,4 +537,120 @@ h1 {
     outline: none;
     border-color: var(--border-color); /* 保持原边框颜色 */
     box-shadow: none;
+}
+
+/* --- 移动端适配 --- */
+@media (max-width: 768px) {
+    /* 1. 全局调整 */
+    body {
+        overflow: hidden; /* 恢复 body 不滚动，实现局部滚动 */
+    }
+
+    .view {
+        /* padding: 10px;  移除特殊 padding，继承桌面端 */
+        height: 100vh; /* 占满屏幕 */
+        overflow: hidden; /* 内部处理滚动 */
+        display: flex; /* 恢复 flex 布局 */
+        flex-direction: column;
+    }
+    
+    /* Header 调整：保持单行，不换行 */
+    .app-header {
+        flex-wrap: nowrap; /* 禁止换行 */
+        /* gap: 8px; 移除特殊 gap */
+        /* margin-bottom: 10px; 移除特殊 margin */
+        min-height: 44px;
+        flex-shrink: 0; /* 防止被压缩 */
+    }
+
+    h1 {
+        position: static;
+        transform: none;
+        order: 0; /* 恢复默认顺序 */
+        width: auto;
+        text-align: center;
+        margin: 0;
+        max-width: none;
+        flex: 1; /* 占据中间空间 */
+        overflow: hidden;
+        text-overflow: ellipsis; /* 超出省略 */
+        font-size: 1.2rem; /* 稍微调小字号 */
+    }
+    
+    /* 调整 Header 内部元素顺序和挤压 */
+    .app-header .btn {
+        flex-shrink: 0; /* 按钮不许压缩 */
+        /* padding: 6px 10px; 移除特殊 padding */
+    }
+    
+    .header-spacer {
+        display: none; /* 移动端隐藏占位符，用 flex 布局自动对齐 */
+    }
+
+    /* 2. 生成页布局调整 (垂直堆叠，整体滚动) */
+    /* 注意：因为 body/view hidden，我们需要让 split-container 自己滚动 */
+    .split-container {
+        flex-direction: column;
+        height: auto; 
+        overflow-y: auto; /* 容器内部滚动 */
+        flex: 1; /* 占据剩余高度 */
+        /* gap: 16px; 继承桌面端 */
+        padding-bottom: 40px;
+    }
+
+    .left-panel {
+        flex: none;
+        width: 100%;
+        min-width: 0;
+        max-height: none; 
+        overflow: visible; 
+    }
+
+    .right-column {
+        flex: none;
+        width: 100%;
+        overflow: visible;
+    }
+
+    .panel {
+        height: auto;
+        overflow: visible;
+    }
+
+    .param-inputs {
+        overflow: visible; 
+    }
+
+    .result-preview {
+        min-height: 500px; /* 给定最小值 */
+        max-height: none; /* 不设最大值，随内容撑开 */
+        height: auto; 
+        overflow: visible; 
+    }
+    
+    /* 编辑页适配 */
+    .form-container {
+        overflow-y: auto; /* 表单容器滚动 */
+        /* padding: 16px; 继承桌面端 */
+    }
+    
+    .form-group textarea {
+        min-height: 500px; /* 给定最小值 */
+        max-height: none;
+        height: auto;
+        flex: none; /* 不再强制占满，而是随内容或最小高度 */
+    }
+
+    /* 3. 首页列表调整 */
+    .template-list {
+        padding-bottom: 80px; /* 增加底部留白，防止被 footer 遮挡 */
+    }
+    
+    .search-bar {
+        flex-shrink: 0;
+    }
+    
+    .app-footer {
+        flex-shrink: 0;
+    }
 }

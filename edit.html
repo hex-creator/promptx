@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>编辑模板 - PR0MPTX</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <!-- 2. 编辑页 (添加/修改) -->
+    <div id="editView" class="view active">
+        <header class="app-header">
+            <button class="btn icon-btn" id="backBtn" title="返回列表">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="19" y1="12" x2="5" y2="12"></line>
+                    <polyline points="12 19 5 12 12 5"></polyline>
+                </svg>
+            </button>
+            <h1 id="editPageTitle">添加模板</h1>
+            <button id="saveTemplateBtn" class="btn primary-btn">保存</button>
+        </header>
+        <div class="form-container">
+            <div class="form-group">
+                <label>模板名称</label>
+                <input type="text" id="templateName" placeholder="例如：代码解释器">
+            </div>
+            <div class="form-group">
+                <label>描述</label>
+                <input type="text" id="templateDesc" placeholder="简要描述这个模板的用途">
+            </div>
+            <div class="form-group">
+                <label>模板内容</label>
+                <div class="toolbar">
+                    <button id="insertParamBtn" class="btn small-btn">插入参数</button>
+                </div>
+                <textarea id="templateContent" placeholder="输入提示词内容，使用 [参数名] 作为占位符"></textarea>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
