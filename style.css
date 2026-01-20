@@ -566,7 +566,7 @@ h1 {
     h1 {
         position: static;
         transform: none;
-        order: 0; /* 恢复默认顺序 */
+        /* order: 0; 移除 order，保持默认 */
         width: auto;
         text-align: center;
         margin: 0;
@@ -575,17 +575,12 @@ h1 {
         overflow: hidden;
         text-overflow: ellipsis; /* 超出省略 */
         font-size: 1.2rem; /* 稍微调小字号 */
+        display: flex;
+        justify-content: center; /* 确保 SVG 居中 */
     }
     
-    /* 调整 Header 内部元素顺序和挤压 */
-    .app-header .btn {
-        flex-shrink: 0; /* 按钮不许压缩 */
-        /* padding: 6px 10px; 移除特殊 padding */
-    }
-    
-    .header-spacer {
-        display: none; /* 移动端隐藏占位符，用 flex 布局自动对齐 */
-    }
+    /* 移除对 order 的修改，保持 HTML 结构顺序 */
+    /* .app-header .btn, .app-header .header-spacer { order: 1; } */
 
     /* 2. 生成页布局调整 (垂直堆叠，整体滚动) */
     /* 注意：因为 body/view hidden，我们需要让 split-container 自己滚动 */
